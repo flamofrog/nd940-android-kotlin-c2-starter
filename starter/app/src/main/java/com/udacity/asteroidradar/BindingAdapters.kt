@@ -45,19 +45,23 @@ fun RecyclerView.bindListData(data: List<Asteroid>?) {
 
 @BindingAdapter("statusIcon")
 fun ImageView.bindAsteroidStatusImage(isHazardous: Boolean) {
-    if (isHazardous) {
+    contentDescription = if (isHazardous) {
         setImageResource(R.drawable.ic_status_potentially_hazardous)
+        "Unhappy face icon."
     } else {
         setImageResource(R.drawable.ic_status_normal)
+        "Happy face icon."
     }
 }
 
 @BindingAdapter("asteroidStatusImage")
-fun bindDetailsStatusImage(imageView: ImageView, isHazardous: Boolean) {
-    if (isHazardous) {
-        imageView.setImageResource(R.drawable.asteroid_hazardous)
+fun ImageView.bindDetailsStatusImage(isHazardous: Boolean) {
+    contentDescription = if (isHazardous) {
+        setImageResource(R.drawable.asteroid_hazardous)
+        "Image depicting a hazardous asteroid."
     } else {
-        imageView.setImageResource(R.drawable.asteroid_safe)
+        setImageResource(R.drawable.asteroid_safe)
+        "Image depicting a non-hazardous asteroid."
     }
 }
 
@@ -77,6 +81,11 @@ fun bindTextViewToKmUnit(textView: TextView, number: Double) {
 fun bindTextViewToDisplayVelocity(textView: TextView, number: Double) {
     val context = textView.context
     textView.text = String.format(context.getString(R.string.km_s_unit_format), number)
+}
+
+@BindingAdapter("imageDescription")
+fun ImageView.bindImageDescription(title: String) {
+    contentDescription = "The image of the day with the title, $title"
 }
 
 @BindingAdapter("imageUrl")

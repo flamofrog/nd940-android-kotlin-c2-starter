@@ -1,7 +1,6 @@
 package com.udacity.asteroidradar.main
 
 import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -11,18 +10,20 @@ import com.udacity.asteroidradar.Constants
 import com.udacity.asteroidradar.PictureOfDay
 import com.udacity.asteroidradar.api.AsteroidApi
 import com.udacity.asteroidradar.api.AsteroidApiFilter
-import com.udacity.asteroidradar.api.parseAsteroidsJsonResult
-import com.udacity.asteroidradar.database.AsteroidDatabaseDao
+import com.udacity.asteroidradar.database.AsteroidDatabase
+import com.udacity.asteroidradar.repository.AsteroidRepository
+import com.udacity.asteroidradar.utils.DateUtils
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
 
 enum class ApiStatus { LOADING, ERROR, DONE }
 
 class MainViewModel(
-    private val database: AsteroidDatabaseDao
+    private val database: AsteroidDatabase
 ) : ViewModel() {
+
+    private val repository = AsteroidRepository(database)
 
     private val _navigateToAsteroid = MutableLiveData<Asteroid?>()
     val navigateToAsteroid: LiveData<Asteroid?>
@@ -52,14 +53,6 @@ class MainViewModel(
         getImageOfTheDay()
         getAsteroids(AsteroidApiFilter.SHOW_WEEK)
     }
-    private fun getStartAndEndDates(daysToInclude: Int): Pair<String, String> {
-        val calendar = Calendar.getInstance()
-        val dateFormat = SimpleDateFormat(Constants.API_QUERY_DATE_FORMAT, Locale.getDefault())
-        val startDate = dateFormat.format(calendar.time)
-        calendar.add(Calendar.DAY_OF_YEAR, daysToInclude)
-        val endDate = dateFormat.format(calendar.time)
-        return Pair(startDate, endDate)
-    }
 
     private fun getAsteroids(filter: AsteroidApiFilter) {
         fun loadAsteroidsFromDatabase() {
@@ -68,7 +61,7 @@ class MainViewModel(
             val dateFormat = SimpleDateFormat(Constants.API_QUERY_DATE_FORMAT, Locale.getDefault())
             val dateToday = dateFormat.format(calendar.time)
             viewModelScope.launch {
-                _asteroidList.value = ArrayList(database.getAllSince(dateToday))
+                _asteroidList.value = ArrayList(database.asteroidDatabaseDao.getAllSince(dateToday))
                 _asteroidApiStatus.value = ApiStatus.DONE
             }
         }
@@ -77,9 +70,8 @@ class MainViewModel(
             viewModelScope.launch {
                 _asteroidApiStatus.value = ApiStatus.LOADING
                 try {
-                    val asteroidList = parseAsteroidsJsonResult(JSONObject(AsteroidApi.retrofitService.getAsteroidsList(startDate, endDate)))
-                    database.insert(asteroidList)
-                    _asteroidList.value = asteroidList
+                    repository.refreshAsteroids(startDate, endDate)
+                    _asteroidList.value = ArrayList(database.asteroidDatabaseDao.getAllBetween(startDate, endDate))
                     _asteroidApiStatus.value = ApiStatus.DONE
                 } catch (e: Exception) {
                     Log.e("kento", "Failed to load Asteroids from the API: ${e.message}")
@@ -93,11 +85,11 @@ class MainViewModel(
                 loadAsteroidsFromDatabase()
             }
             AsteroidApiFilter.SHOW_WEEK -> {
-                val dates = getStartAndEndDates(Constants.DEFAULT_END_DATE_DAYS)
+                val dates = DateUtils.getStartAndEndDates(Constants.DEFAULT_END_DATE_DAYS)
                 loadAsteroidsFromApi(dates.first, dates.second)
             }
             AsteroidApiFilter.SHOW_TODAY -> {
-                val dates = getStartAndEndDates(1)
+                val dates = DateUtils.getStartAndEndDates(1)
                 loadAsteroidsFromApi(dates.first, dates.second)
             }
         }

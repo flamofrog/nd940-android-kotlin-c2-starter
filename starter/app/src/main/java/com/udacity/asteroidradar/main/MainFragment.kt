@@ -19,7 +19,6 @@ class MainFragment : Fragment() {
             this,
             MainViewModelFactory(
                 AsteroidDatabase.getInstance(requireActivity().application)
-                    .asteroidDatabaseDao
             )
         )[MainViewModel::class.java]
     }

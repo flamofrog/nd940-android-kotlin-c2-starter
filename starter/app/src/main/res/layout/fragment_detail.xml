@@ -24,7 +24,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:srcCompat="@drawable/asteroid_safe" />
+            tools:srcCompat="@drawable/asteroid_safe"
+            android:contentDescription="@string/an_image_depicting_an_asteroid" />
 
         <ScrollView
             android:layout_width="0dp"
@@ -93,8 +94,10 @@
                         android:id="@+id/help_button"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:contentDescription="@string/button_to_show_additional_information_regarding_astronomical_units_au"
                         android:padding="16dp"
-                        app:srcCompat="@drawable/ic_help_circle" />
+                        app:srcCompat="@drawable/ic_help_circle"
+                        tools:ignore="RedundantDescriptionCheck" />
 
                 </LinearLayout>
 
